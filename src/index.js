@@ -7,6 +7,7 @@ const MongoStore = require('connect-mongo')(session)
 const connectDB = require('./db/mongo')
 const userRouter = require('./routers/userRouter')
 const urlRouter = require('./routers/urlRouter')
+const URL = require('./models/URL')
 
 const app = express()
 
@@ -34,6 +35,22 @@ app.use(session({
 app.use(morgan('dev'))
 app.use(helmet())
 
+//userroutes and urlroutes
 app.use(userRouter)
 app.use(urlRouter)
+
+//redirect url
+app.get('/:id', async (req, res) => {
+    try {
+        const url = await URL.findOne({ slug: req.params.id })
+        if (!url) {
+            throw new Error('URL not found...!')
+        }
+
+        res.redirect(url.longUrl)
+    } catch (error) {
+        res.status(404).json({ message: error.message })
+    }
+})
+
 app.listen(process.env.PORT, console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${process.env.PORT}`))
